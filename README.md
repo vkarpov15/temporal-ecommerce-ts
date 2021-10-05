@@ -4,4 +4,3 @@
 2. Run `npm install` to install dependencies.
 3. Run `npm run build` to compile the project.
 4. Run `npm run worker` to start the worker. Leave the worker process running.
-5. Run `npm run schedule-workflow` to start the example. Should print out "Hello, Temporal!"

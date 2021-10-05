@@ -11,12 +11,12 @@ export interface Cart {
 export type CartWorkflow = () => {
   execute(): Promise<void>;
   signals: {
-    addToCart: (item: CartItem) => void;
-    removeFromCart: (item: CartItem) => void;
-    updateCart: (email: string) => void;
-    checkout: () => void;
+    addToCart(item: CartItem): void;
+    removeFromCart(item: CartItem): void;
+    updateEmail(email: string): void;
+    checkout(): void;
   };
   queries: {
-    getCart: () => Cart;
+    getCart(): Cart;
   };
 };

@@ -24,8 +24,7 @@ describe('cart workflow', function() {
   });
 
   beforeEach(function() {
-    const connection = new Connection();
-    const client = new WorkflowClient(connection.service);
+    const client = new WorkflowClient();
 
     workflow = client.createWorkflowHandle(cartWorkflow, { taskQueue });
   });
@@ -51,10 +50,10 @@ describe('cart workflow', function() {
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '1', quantity: 2 });
 
-    await workflow.cancel();
+    await workflow.terminate();
   });
 
-  it('checkout', async function() {
+  it('completes when it receives a checkout signal', async function() {
     await workflow.start();
     
     let state = await workflow.query.getCart();

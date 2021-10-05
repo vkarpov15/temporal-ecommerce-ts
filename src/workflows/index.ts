@@ -5,7 +5,7 @@ import type * as activities from '../activities';
 
 export const cartWorkflow: CartWorkflow = () => {
   const state: Cart = { items: [] };
-  const checkoutTrigger = new Trigger();
+  const checkoutTrigger = new Trigger<void>();
 
   return {
     async execute(): Promise<void> {
@@ -14,10 +14,10 @@ export const cartWorkflow: CartWorkflow = () => {
     signals: {
       addToCart(item: CartItem): void {
         const existingItem = state.items.find(({ productId }) => productId === item.productId);
-        if (existingItem != null) {
+        if (existingItem !== undefined) {
           existingItem.quantity += item.quantity;
         } else {
-          state.items.push({ ...item });
+          state.items.push(item);
         }
       },
       removeFromCart(item: CartItem): void {
@@ -32,11 +32,11 @@ export const cartWorkflow: CartWorkflow = () => {
           state.items.splice(index, 1);
         }
       },
-      updateCart(email: string): void {
+      updateEmail(email: string): void {
         state.email = email;
       },
       checkout(): void {
-        checkoutTrigger.resolve(null);
+        checkoutTrigger.resolve();
       }
     },
     queries: {
