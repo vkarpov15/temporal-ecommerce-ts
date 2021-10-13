@@ -1,0 +1,22 @@
+{
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --build ./tsconfig.json",
+    "build.watch": "tsc --build --watch ./tsconfig.json",
+    "start": "node ./lib/worker",
+    "start.watch": "nodemon ./lib/worker",
+    "test": "mocha ./lib/test/*.test.js"
+  },
+  "name": "temporal-hello-world",
+  "dependencies": {
+    "temporalio": "0.4.2"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.0",
+    "@types/mocha": "9.0.0",
+    "mocha": "9.1.2",
+    "nodemon": "^2.0.12",
+    "typescript": "^4.4.2"
+  }
+}
