@@ -4,7 +4,7 @@ run().catch((err) => console.log(err));
 
 async function run() {
   const worker = await Worker.create({
-    workDir: __dirname,
+    workflowsPath: require.resolve('./workflows'),
     taskQueue: 'ecommerce',
   });
 
