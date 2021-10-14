@@ -44,6 +44,9 @@ export async function cartWorkflow(): Promise<void> {
   });
 
   setListener(checkoutSignal, function checkoutSignalHandler(): void {
+    if (state.email === undefined) {
+      throw new Error('Must have email to check out!');
+    }
     state.status = CartStatus.CHECKED_OUT;
   });
 

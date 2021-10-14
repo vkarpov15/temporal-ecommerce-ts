@@ -1,5 +1,5 @@
-import { WorkflowClient, WorkflowHandle } from '@temporalio/client';
-import { Worker } from '@temporalio/worker';
+import { WorkflowClient, WorkflowHandle, WorkflowExecutionFailedError } from '@temporalio/client';
+import { Core, Worker, DefaultLogger } from '@temporalio/worker';
 import { describe, before, after, afterEach, it } from 'mocha';
 import {
   cartWorkflow,
@@ -20,6 +20,11 @@ describe('cart workflow', function() {
 
   before(async function() {
     this.timeout(10000);
+
+    await Core.install({
+      logger: new DefaultLogger('ERROR'),
+    });
+
     worker = await Worker.create({
       workflowsPath: require.resolve('../workflows'),
       taskQueue,
@@ -69,11 +74,28 @@ describe('cart workflow', function() {
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
 
+    await workflow.signal(updateEmailSignal, 'test@temporal.io');
+    state = await workflow.query(getCartQuery);
+    assert.equal(state.items.length, 1);
+    assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
+    assert.equal(state.email, 'test@temporal.io');
+
     await workflow.signal(checkoutSignal);
     await workflow.result();
 
     state = await workflow.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
+  });
+
+  it('throws if checking out with no email set', async function() {
+    await workflow.start();
+
+    await workflow.signal(checkoutSignal);
+    const err: WorkflowExecutionFailedError | null = await workflow.result().then(() => null, err => err);
+
+    assert.ok(err);
+    assert.ok(err.cause);
+    assert.equal(err.cause.message, 'Must have email to check out!');
   });
 });

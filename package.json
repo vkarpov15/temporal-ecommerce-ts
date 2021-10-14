@@ -10,7 +10,7 @@
   },
   "name": "temporal-hello-world",
   "dependencies": {
-    "temporalio": "0.11.0"
+    "temporalio": "0.11.x"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.0",
