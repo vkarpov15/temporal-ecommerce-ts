@@ -61,9 +61,17 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
 
   setListener(checkoutSignal, function checkoutSignalHandler(): void {
     if (state.email === undefined) {
-      throw new Error('Must have email to check out!');
+      state.status = CartStatus.ERROR;
+      state.error = 'Must have email to check out!';
+      return;
+    }
+    if (state.items.length === 0) {
+      state.status = CartStatus.ERROR;
+      state.error = 'Must have items to check out!';
+      return;
     }
     clearTimeout(timeout);
+    state.error = undefined;
     state.status = CartStatus.CHECKED_OUT;
   });
 

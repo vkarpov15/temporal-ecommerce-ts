@@ -1,6 +1,7 @@
 export enum CartStatus {
   IN_PROGRESS,
-  CHECKED_OUT
+  CHECKED_OUT,
+  ERROR
 }
 
 export interface CartItem {
@@ -12,6 +13,7 @@ export interface Cart {
   status: CartStatus;
   email?: string;
   items: CartItem[];
+  error?: string;
 }
 
 export interface CartWorkflowOptions {

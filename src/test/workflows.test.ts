@@ -12,7 +12,7 @@ import {
 import assert from 'assert';
 import { createActivities } from '../activities';
 import sinon from 'sinon';
-import mailgun = require('mailgun-js');
+import { CartStatus } from '../interfaces';
 
 const taskQueue = 'test' + (new Date()).toLocaleDateString('en-US');
 
@@ -98,15 +98,14 @@ describe('cart workflow', function() {
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
   });
 
-  it('throws if checking out with no email set', async function() {
+  it('sets error status if checking out with no email set', async function() {
     await workflow.start();
 
     await workflow.signal(checkoutSignal);
-    const err: WorkflowExecutionFailedError | null = await workflow.result().then(() => null, err => err);
-
-    assert.ok(err);
-    assert.ok(err.cause);
-    assert.equal(err.cause.message, 'Must have email to check out!');
+    
+    let state = await workflow.query(getCartQuery);
+    assert.equal(state.status, CartStatus.ERROR);
+    assert.equal(state.error, 'Must have email to check out!');
   });
 
   it('sends abandoned cart email', async function() {
