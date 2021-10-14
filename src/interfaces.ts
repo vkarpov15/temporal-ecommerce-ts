@@ -12,4 +12,8 @@ export interface Cart {
   status: CartStatus;
   email?: string;
   items: CartItem[];
-};
+}
+
+export interface CartWorkflowOptions {
+  abandonedCartTimeoutMS: number;
+}

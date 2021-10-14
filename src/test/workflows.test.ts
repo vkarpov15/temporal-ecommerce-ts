@@ -10,6 +10,9 @@ import {
   getCartQuery
 } from '../workflows';
 import assert from 'assert';
+import { createActivities } from '../activities';
+import sinon from 'sinon';
+import mailgun = require('mailgun-js');
 
 const taskQueue = 'test' + (new Date()).toLocaleDateString('en-US');
 
@@ -17,9 +20,13 @@ describe('cart workflow', function() {
   let runPromise: Promise<void>;
   let worker: Worker;
   let workflow: WorkflowHandle<typeof cartWorkflow>;
+  let sendStub: sinon.SinonStub<any[], Promise<any>>; // `any` because `@types/mailgun` doesn't export `SendResponse`
 
   before(async function() {
     this.timeout(10000);
+
+    sendStub = sinon.stub().callsFake(() => Promise.resolve());
+    const activities = createActivities({ send: sendStub }, 'test@temporal.io');
 
     await Core.install({
       logger: new DefaultLogger('ERROR'),
@@ -28,12 +35,15 @@ describe('cart workflow', function() {
     worker = await Worker.create({
       workflowsPath: require.resolve('../workflows'),
       taskQueue,
+      activities,
     });
 
     runPromise = worker.run();
   });
 
   beforeEach(function() {
+    sendStub.resetHistory();
+
     const client = new WorkflowClient();
 
     workflow = client.createWorkflowHandle(cartWorkflow, { taskQueue });
@@ -64,7 +74,7 @@ describe('cart workflow', function() {
   });
 
   it('completes when it receives a checkout signal', async function() {
-    await workflow.start();
+    await workflow.start({ abandonedCartTimeoutMS: 50 });
     
     let state = await workflow.query(getCartQuery);
     assert.equal(state.items.length, 0);
@@ -97,5 +107,26 @@ describe('cart workflow', function() {
     assert.ok(err);
     assert.ok(err.cause);
     assert.equal(err.cause.message, 'Must have email to check out!');
+  });
+
+  it('sends abandoned cart email', async function() {
+    await workflow.start({ abandonedCartTimeoutMS: 50 });
+    
+    let state = await workflow.query(getCartQuery);
+    assert.equal(state.items.length, 0);
+
+    await workflow.signal(addToCartSignal, { productId: '2', quantity: 2 });
+    state = await workflow.query(getCartQuery);
+    assert.equal(state.items.length, 1);
+    assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
+
+    await workflow.signal(updateEmailSignal, 'test@temporal.io');
+    state = await workflow.query(getCartQuery);
+    assert.equal(state.items.length, 1);
+    assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
+    assert.equal(state.email, 'test@temporal.io');
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    assert.ok(sendStub.calledOnce);
   });
 });
