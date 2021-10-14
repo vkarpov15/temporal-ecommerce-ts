@@ -23,7 +23,7 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
   let timeout = setTimeout(() => state.email && sendAbandonedCartEmail(state.email), abandonedCartTimeoutMS);
   function resetTimeout() {
     clearTimeout(timeout);
-    setTimeout(() => state.email && sendAbandonedCartEmail(state.email), abandonedCartTimeoutMS);
+    timeout = setTimeout(() => state.email && sendAbandonedCartEmail(state.email), abandonedCartTimeoutMS);
   }
 
   setListener(addToCartSignal, function addToCartSignal(item: CartItem): void {
