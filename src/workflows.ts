@@ -20,10 +20,19 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
     options.abandonedCartTimeoutMS :
     1000 * 60;
   
-  let timeout = setTimeout(() => state.email && sendAbandonedCartEmail(state.email), abandonedCartTimeoutMS);
+  let abandonedCartPromise = Promise.resolve();
+  let timeout = setTimeout(handleAbandonedCartEmail, abandonedCartTimeoutMS);
   function resetTimeout() {
     clearTimeout(timeout);
-    timeout = setTimeout(() => state.email && sendAbandonedCartEmail(state.email), abandonedCartTimeoutMS);
+    timeout = setTimeout(handleAbandonedCartEmail, abandonedCartTimeoutMS);
+  }
+
+  function handleAbandonedCartEmail() {
+    if (state.email === undefined) {
+      return;
+    }
+    state.status = CartStatus.ABANDONED;
+    abandonedCartPromise = sendAbandonedCartEmail(state.email);
   }
 
   setListener(addToCartSignal, function addToCartSignal(item: CartItem): void {
@@ -61,11 +70,13 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
 
   setListener(checkoutSignal, function checkoutSignalHandler(): void {
     if (state.email === undefined) {
+      resetTimeout();
       state.status = CartStatus.ERROR;
       state.error = 'Must have email to check out!';
       return;
     }
     if (state.items.length === 0) {
+      resetTimeout();
       state.status = CartStatus.ERROR;
       state.error = 'Must have items to check out!';
       return;
@@ -76,4 +87,5 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
   });
 
   await condition(() => state.status === CartStatus.CHECKED_OUT);
+  await abandonedCartPromise;
 }

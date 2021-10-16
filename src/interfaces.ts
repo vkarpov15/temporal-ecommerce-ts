@@ -1,7 +1,8 @@
 export enum CartStatus {
   IN_PROGRESS,
   CHECKED_OUT,
-  ERROR
+  ERROR,
+  ABANDONED
 }
 
 export interface CartItem {

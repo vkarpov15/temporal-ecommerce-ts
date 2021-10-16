@@ -125,7 +125,17 @@ describe('cart workflow', function() {
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
     assert.equal(state.email, 'test@temporal.io');
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise<void>(resolve => {
+      const interval = setInterval(() => {
+        if (!sendStub.getCalls().length) {
+          return;
+        }
+        resolve();
+        clearInterval(interval);
+      }, 100);
+    });
+
     assert.ok(sendStub.calledOnce);
+    assert.equal(sendStub.getCalls()[0].args[0].to, 'test@temporal.io');
   });
 });
