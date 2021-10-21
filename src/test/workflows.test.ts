@@ -1,6 +1,6 @@
-import { WorkflowClient, WorkflowHandle, WorkflowExecutionFailedError } from '@temporalio/client';
+import { WorkflowClient, WorkflowHandle } from '@temporalio/client';
 import { Core, Worker, DefaultLogger } from '@temporalio/worker';
-import { describe, before, after, afterEach, it } from 'mocha';
+import { describe, before, after, it } from 'mocha';
 import {
   cartWorkflow,
   addToCartSignal,
