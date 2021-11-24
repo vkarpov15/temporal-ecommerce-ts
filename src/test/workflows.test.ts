@@ -28,9 +28,8 @@ describe('cart workflow', function() {
     sendStub = sinon.stub().callsFake(() => Promise.resolve());
     const activities = createActivities({ send: sendStub }, 'test@temporal.io');
 
-    await Core.install({
-      logger: new DefaultLogger('ERROR'),
-    });
+    // Suppress default log output to avoid logger polluting test output
+    await Core.install({ logger: new DefaultLogger('ERROR') });
 
     worker = await Worker.create({
       workflowsPath: require.resolve('../workflows'),
