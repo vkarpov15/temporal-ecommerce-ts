@@ -1,6 +1,6 @@
-import { WorkflowClient, WorkflowHandle, WorkflowExecutionFailedError } from '@temporalio/client';
+import { WorkflowClient, WorkflowHandle } from '@temporalio/client';
 import { Core, Worker, DefaultLogger } from '@temporalio/worker';
-import { describe, before, after, afterEach, it } from 'mocha';
+import { describe, before, after, it } from 'mocha';
 import {
   cartWorkflow,
   addToCartSignal,
@@ -28,9 +28,8 @@ describe('cart workflow', function() {
     sendStub = sinon.stub().callsFake(() => Promise.resolve());
     const activities = createActivities({ send: sendStub }, 'test@temporal.io');
 
-    await Core.install({
-      logger: new DefaultLogger('ERROR'),
-    });
+    // Suppress default log output to avoid logger polluting test output
+    await Core.install({ logger: new DefaultLogger('ERROR') });
 
     worker = await Worker.create({
       workflowsPath: require.resolve('../workflows'),

@@ -17,6 +17,14 @@ export interface Cart {
   error?: string;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  price: number;
+}
+
 export interface CartWorkflowOptions {
   abandonedCartTimeoutMS: number;
 }
