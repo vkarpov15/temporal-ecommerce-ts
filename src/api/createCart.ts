@@ -3,9 +3,11 @@ import { client, taskQueue } from './client';
 import { cartWorkflow } from '../workflows';
 
 export default async function postCart(req: Request, res: Response) {
-  const workflow = client.createWorkflowHandle(cartWorkflow, { taskQueue });
+  const workflowId = 'create-cart-' + Date.now();
+  await client.start(cartWorkflow, {
+    taskQueue,
+    workflowId
+  });
 
-  await workflow.start();
-
-  res.json({ workflowId: workflow.workflowId });
+  res.json({ workflowId });
 }

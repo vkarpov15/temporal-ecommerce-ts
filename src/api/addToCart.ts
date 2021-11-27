@@ -9,8 +9,8 @@ export default async function addToCart(req: Request, res: Response) {
   const quantity: number = req.body.quantity;
   assert.ok(workflowId);
 
-  const workflow = client.createWorkflowHandle<typeof cartWorkflow>({ workflowId });
+  const handle = client.getHandle<typeof cartWorkflow>(workflowId);
 
-  await workflow.signal(addToCartSignal, { productId, quantity });
+  await handle.signal(addToCartSignal, { productId, quantity });
   res.json({ ok: 1 });
 }

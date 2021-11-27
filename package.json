@@ -13,7 +13,7 @@
     "dotenv": "^10.0.0",
     "express": "4.x",
     "mailgun-js": "^0.22.0",
-    "temporalio": "0.11.x"
+    "temporalio": "0.16.x"
   },
   "devDependencies": {
     "@awaitjs/express": "0.8.0",
