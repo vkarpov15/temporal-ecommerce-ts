@@ -1,0 +1,12 @@
+ports:
+  - port: 5432 #postgres
+    onOpen: ignore
+  - port: 7233 #temporal server
+    onOpen: ignore
+  - port: 8088 #temporal web
+    onOpen: ignore
+    visibility: public
+tasks:
+  - name: Temporal Server
+    init: docker-compose pull
+    command: docker-compose up
