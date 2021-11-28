@@ -1,4 +1,5 @@
 import { WorkflowClient, WorkflowHandle } from '@temporalio/client';
+import { CartStatus } from '../interfaces';
 import { Core, Worker, DefaultLogger } from '@temporalio/worker';
 import { describe, before, after, it } from 'mocha';
 import {
@@ -12,7 +13,7 @@ import {
 import assert from 'assert';
 import { createActivities } from '../activities';
 import sinon from 'sinon';
-import { CartStatus } from '../interfaces';
+import { v4 as uuidv4 } from 'uuid'
 
 const taskQueue = 'test' + (new Date()).toLocaleDateString('en-US');
 
@@ -47,7 +48,7 @@ describe('cart workflow', function() {
 
     handle = await client.start(cartWorkflow, {
       taskQueue,
-      workflowId: 'cart-test-' + Date.now(),
+      workflowId: 'cart-test-' + uuidv4(),
       args: [{ abandonedCartTimeoutMS: 50 }]
     });
   });
