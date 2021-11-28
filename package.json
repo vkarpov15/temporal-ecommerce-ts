@@ -8,7 +8,7 @@
     "start.watch": "nodemon ./lib/worker",
     "test": "mocha ./lib/test/*.test.js"
   },
-  "name": "temporal-hello-world",
+  "name": "temporal-ecommerce",
   "dependencies": {
     "dotenv": "^10.0.0",
     "express": "4.x",
