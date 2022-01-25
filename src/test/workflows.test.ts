@@ -1,4 +1,5 @@
 import { WorkflowClient, WorkflowHandle } from '@temporalio/client';
+import { CartStatus } from '../interfaces';
 import { Core, Worker, DefaultLogger } from '@temporalio/worker';
 import { describe, before, after, it } from 'mocha';
 import {
@@ -12,14 +13,14 @@ import {
 import assert from 'assert';
 import { createActivities } from '../activities';
 import sinon from 'sinon';
-import { CartStatus } from '../interfaces';
+import { v4 as uuidv4 } from 'uuid'
 
 const taskQueue = 'test' + (new Date()).toLocaleDateString('en-US');
 
 describe('cart workflow', function() {
   let runPromise: Promise<void>;
   let worker: Worker;
-  let workflow: WorkflowHandle<typeof cartWorkflow>;
+  let handle: WorkflowHandle<typeof cartWorkflow>;
   let sendStub: sinon.SinonStub<any[], Promise<any>>; // `any` because `@types/mailgun` doesn't export `SendResponse`
 
   before(async function() {
@@ -40,12 +41,16 @@ describe('cart workflow', function() {
     runPromise = worker.run();
   });
 
-  beforeEach(function() {
+  beforeEach(async function() {
     sendStub.resetHistory();
 
     const client = new WorkflowClient();
 
-    workflow = client.createWorkflowHandle(cartWorkflow, { taskQueue });
+    handle = await client.start(cartWorkflow, {
+      taskQueue,
+      workflowId: 'cart-test-' + uuidv4(),
+      args: [{ abandonedCartTimeoutMS: 50 }]
+    });
   });
 
   after(async function() {
@@ -53,73 +58,65 @@ describe('cart workflow', function() {
     await runPromise;
   });
 
-  it('handles adding and removing from cart', async function() {
-    await workflow.start();
-    
-    let state = await workflow.query(getCartQuery);
+  it('handles adding and removing from cart', async function() {    
+    let state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 0);
 
-    await workflow.signal(addToCartSignal, { productId: '1', quantity: 3 });
-    state = await workflow.query(getCartQuery);
+    await handle.signal(addToCartSignal, { productId: '1', quantity: 3 });
+    state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '1', quantity: 3 });
 
-    await workflow.signal(removeFromCartSignal, { productId: '1', quantity: 1 });
-    state = await workflow.query(getCartQuery);
+    await handle.signal(removeFromCartSignal, { productId: '1', quantity: 1 });
+    state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '1', quantity: 2 });
 
-    await workflow.terminate();
+    await handle.terminate();
   });
 
-  it('completes when it receives a checkout signal', async function() {
-    await workflow.start({ abandonedCartTimeoutMS: 50 });
-    
-    let state = await workflow.query(getCartQuery);
+  it('completes when it receives a checkout signal', async function() {    
+    let state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 0);
 
-    await workflow.signal(addToCartSignal, { productId: '2', quantity: 2 });
-    state = await workflow.query(getCartQuery);
+    await handle.signal(addToCartSignal, { productId: '2', quantity: 2 });
+    state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
 
-    await workflow.signal(updateEmailSignal, 'test@temporal.io');
-    state = await workflow.query(getCartQuery);
+    await handle.signal(updateEmailSignal, 'test@temporal.io');
+    state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
     assert.equal(state.email, 'test@temporal.io');
 
-    await workflow.signal(checkoutSignal);
-    await workflow.result();
+    await handle.signal(checkoutSignal);
+    await handle.result();
 
-    state = await workflow.query(getCartQuery);
+    state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
   });
 
   it('sets error status if checking out with no email set', async function() {
-    await workflow.start();
-
-    await workflow.signal(checkoutSignal);
+    await handle.signal(checkoutSignal);
     
-    let state = await workflow.query(getCartQuery);
+    let state = await handle.query(getCartQuery);
     assert.equal(state.status, CartStatus.ERROR);
     assert.equal(state.error, 'Must have email to check out!');
   });
 
   it('sends abandoned cart email', async function() {
-    await workflow.start({ abandonedCartTimeoutMS: 50 });
-    
-    let state = await workflow.query(getCartQuery);
+    let state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 0);
 
-    await workflow.signal(addToCartSignal, { productId: '2', quantity: 2 });
-    state = await workflow.query(getCartQuery);
+    await handle.signal(addToCartSignal, { productId: '2', quantity: 2 });
+    state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
 
-    await workflow.signal(updateEmailSignal, 'test@temporal.io');
-    state = await workflow.query(getCartQuery);
+    await handle.signal(updateEmailSignal, 'test@temporal.io');
+    state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
     assert.equal(state.email, 'test@temporal.io');

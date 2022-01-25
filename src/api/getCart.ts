@@ -7,8 +7,8 @@ export default async function getCart(req: Request, res: Response) {
   const workflowId: string = req.params.workflowId;
   assert.ok(workflowId);
 
-  const workflow = client.createWorkflowHandle<typeof cartWorkflow>({ workflowId });
+  const handle = client.getHandle<typeof cartWorkflow>(workflowId);
 
-  const state = await workflow.query(getCartQuery);
+  const state = await handle.query(getCartQuery);
   res.json({ state });
 }

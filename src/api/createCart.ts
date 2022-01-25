@@ -1,11 +1,14 @@
 import { Request, Response } from 'express';
 import { client, taskQueue } from './client';
 import { cartWorkflow } from '../workflows';
+import { v4 as uuidv4 } from 'uuid';
 
-export default async function postCart(req: Request, res: Response) {
-  const workflow = client.createWorkflowHandle(cartWorkflow, { taskQueue });
+export default async function postCart(_req: Request, res: Response) {
+  const workflowId = uuidv4();
+  await client.start(cartWorkflow, {
+    taskQueue,
+    workflowId
+  });
 
-  await workflow.start();
-
-  res.json({ workflowId: workflow.workflowId });
+  res.json({ workflowId });
 }

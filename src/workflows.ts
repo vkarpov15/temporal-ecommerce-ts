@@ -1,8 +1,8 @@
-import { createActivityHandle, defineSignal, defineQuery, setListener, condition, CancellationScope } from '@temporalio/workflow';
+import { proxyActivities, defineSignal, defineQuery, setHandler, condition } from '@temporalio/workflow';
 import { Cart, CartItem, CartStatus, CartWorkflowOptions } from './interfaces';
 import type { createActivities } from './activities';
 
-const { sendAbandonedCartEmail } = createActivityHandle<ReturnType<typeof createActivities>>({
+const { sendAbandonedCartEmail } = proxyActivities<ReturnType<typeof createActivities>>({
   startToCloseTimeout: '240 minutes',
 });
 
@@ -35,7 +35,7 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
     abandonedCartPromise = sendAbandonedCartEmail(state.email);
   }
 
-  setListener(addToCartSignal, function addToCartSignal(item: CartItem): void {
+  setHandler(addToCartSignal, function addToCartSignal(item: CartItem): void {
     resetTimeout();
     const existingItem = state.items.find(({ productId }) => productId === item.productId);
     if (existingItem !== undefined) {
@@ -45,7 +45,7 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
     }
   });
 
-  setListener(removeFromCartSignal, function removeFromCartSignalHandler(item: CartItem): void {
+  setHandler(removeFromCartSignal, function removeFromCartSignalHandler(item: CartItem): void {
     resetTimeout();
     const index = state.items.findIndex(({ productId }) => productId === item.productId);
     if (index === -1) {
@@ -59,16 +59,16 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
     }
   });
 
-  setListener(updateEmailSignal, function updateEmailSignalHandler(email: string): void {
+  setHandler(updateEmailSignal, function updateEmailSignalHandler(email: string): void {
     resetTimeout();
     state.email = email;
   });
 
-  setListener(getCartQuery, (): Cart => {
+  setHandler(getCartQuery, (): Cart => {
     return state;
   });
 
-  setListener(checkoutSignal, function checkoutSignalHandler(): void {
+  setHandler(checkoutSignal, function checkoutSignalHandler(): void {
     if (state.email === undefined) {
       resetTimeout();
       state.status = CartStatus.ERROR;
