@@ -13,7 +13,8 @@
     "dotenv": "^10.0.0",
     "express": "4.x",
     "mailgun-js": "^0.22.0",
-    "temporalio": "0.16.x",
+    "temporal-rest": "0.1.0",
+    "temporalio": "0.17.x",
     "uuid": "8.x"
   },
   "devDependencies": {
