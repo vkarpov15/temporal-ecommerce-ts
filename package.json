@@ -13,7 +13,7 @@
     "dotenv": "^10.0.0",
     "express": "4.x",
     "mailgun-js": "^0.22.0",
-    "temporal-rest": "0.1.0",
+    "temporal-rest": "0.1.1",
     "temporalio": "0.17.x",
     "uuid": "8.x"
   },
