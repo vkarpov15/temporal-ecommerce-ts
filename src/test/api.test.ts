@@ -30,7 +30,7 @@ describe('API', function() {
 
     worker = await Worker.create({
       workflowsPath: require.resolve('../workflows'),
-      taskQueue: 'ecommerce',
+      taskQueue: 'ecommerce-test',
       activities,
     });
 
