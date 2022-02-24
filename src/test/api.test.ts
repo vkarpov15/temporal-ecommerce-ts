@@ -44,6 +44,7 @@ describe('API', function() {
   });
 
   it('handles adding and removing from cart', async function() {
+    this.timeout(10000);
     const { data: { workflowId } } = await client.post<{ workflowId: string }>('/workflow/cartWorkflow');
 
     await new Promise(resolve => setTimeout(resolve, 100));
