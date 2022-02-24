@@ -44,18 +44,19 @@ describe('API', function() {
   });
 
   it('handles adding and removing from cart', async function() {
-    const { data: { workflowId } } = await client.post<{ workflowId: string }>('/cart');
+    this.timeout(10000);
+    const { data: { workflowId } } = await client.post<{ workflowId: string }>('/workflow/cartWorkflow');
 
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    let { data: { state } } = await client.get<{ state: Cart }>(`/cart/${workflowId}`);
-    assert.equal(state.items.length, 0);
+    let { data: { result } } = await client.get<{ result: Cart }>(`/query/getCart/${workflowId}`);
+    assert.equal(result.items.length, 0);
 
-    await client.put(`/cart/${workflowId}/add`, { productId: '0', quantity: 1 });
+    await client.put(`/signal/addToCart/${workflowId}`, { productId: '0', quantity: 1 });
 
-    ({ data: { state } } = await client.get<{ state: Cart }>(`/cart/${workflowId}`));
-    assert.equal(state.items.length, 1);
-    assert.equal(state.items[0].productId, '0');
-    assert.equal(state.items[0].quantity, 1);
+    ({ data: { result } } = await client.get<{ result: Cart }>(`/query/getCart/${workflowId}`));
+    assert.equal(result.items.length, 1);
+    assert.equal(result.items[0].productId, '0');
+    assert.equal(result.items[0].quantity, 1);
   });
 });
