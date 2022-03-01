@@ -1,6 +1,8 @@
 import { proxyActivities, defineSignal, defineQuery, setHandler, condition } from '@temporalio/workflow';
-import { Cart, CartItem, CartStatus, CartWorkflowOptions } from './interfaces';
+import { Cart, CartItem, CartItemDecoder, CartStatus, CartWorkflowOptions, UpdateEmailSignal, UpdateEmailSignalDecoder } from './interfaces';
 import type { createActivities } from './activities';
+import { pipe } from 'fp-ts/function';
+import { fold } from 'fp-ts/Either';
 
 const { sendAbandonedCartEmail } = proxyActivities<ReturnType<typeof createActivities>>({
   startToCloseTimeout: '240 minutes',
@@ -8,7 +10,7 @@ const { sendAbandonedCartEmail } = proxyActivities<ReturnType<typeof createActiv
 
 export const addToCartSignal = defineSignal<[CartItem]>('addToCart');
 export const removeFromCartSignal = defineSignal<[CartItem]>('removeFromCart');
-export const updateEmailSignal = defineSignal<[string]>('updateEmail');
+export const updateEmailSignal = defineSignal<[UpdateEmailSignal]>('updateEmail');
 export const checkoutSignal = defineSignal('checkout');
 
 export const getCartQuery = defineQuery<Cart>('getCart');
@@ -36,6 +38,7 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
   }
 
   setHandler(addToCartSignal, function addToCartSignal(item: CartItem): void {
+    item = pipe(CartItemDecoder.decode(item), fold(err => { throw err; }, (val: CartItem) => val));
     resetTimeout();
     const existingItem = state.items.find(({ productId }) => productId === item.productId);
     if (existingItem !== undefined) {
@@ -46,6 +49,7 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
   });
 
   setHandler(removeFromCartSignal, function removeFromCartSignalHandler(item: CartItem): void {
+    item = pipe(CartItemDecoder.decode(item), fold(err => { throw err; }, (val: CartItem) => val));
     resetTimeout();
     const index = state.items.findIndex(({ productId }) => productId === item.productId);
     if (index === -1) {
@@ -59,9 +63,10 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
     }
   });
 
-  setHandler(updateEmailSignal, function updateEmailSignalHandler(email: string): void {
+  setHandler(updateEmailSignal, function updateEmailSignalHandler(data: UpdateEmailSignal): void {
+    data = pipe(UpdateEmailSignalDecoder.decode(data), fold(err => { throw err; }, (val: UpdateEmailSignal) => val));
     resetTimeout();
-    state.email = email;
+    state.email = data.email;
   });
 
   setHandler(getCartQuery, (): Cart => {

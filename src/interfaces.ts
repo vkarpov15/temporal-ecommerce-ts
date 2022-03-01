@@ -1,3 +1,5 @@
+import * as t from 'io-ts';
+
 export enum CartStatus {
   IN_PROGRESS,
   CHECKED_OUT,
@@ -5,10 +7,12 @@ export enum CartStatus {
   ABANDONED
 }
 
-export interface CartItem {
-  productId: string;
-  quantity: number;
-}
+export const CartItemDecoder = t.exact(t.type({
+  productId: t.string,
+  quantity: t.number
+}));
+
+export type CartItem = t.TypeOf<typeof CartItemDecoder>;
 
 export interface Cart {
   status: CartStatus;
@@ -28,3 +32,9 @@ export interface Product {
 export interface CartWorkflowOptions {
   abandonedCartTimeoutMS: number;
 }
+
+export const UpdateEmailSignalDecoder = t.exact(t.type({
+  email: t.string
+}));
+
+export type UpdateEmailSignal = t.TypeOf<typeof UpdateEmailSignalDecoder>;
