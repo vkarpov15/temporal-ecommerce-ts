@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as runtypes from 'runtypes';
 
 export enum CartStatus {
   IN_PROGRESS,
@@ -7,12 +7,12 @@ export enum CartStatus {
   ABANDONED
 }
 
-export const CartItemDecoder = t.exact(t.type({
-  productId: t.string,
-  quantity: t.number
-}));
+export const CartItemDecoder = runtypes.Record({
+  productId: runtypes.String,
+  quantity: runtypes.Number
+});
 
-export type CartItem = t.TypeOf<typeof CartItemDecoder>;
+export type CartItem = runtypes.Static<typeof CartItemDecoder>;
 
 export interface Cart {
   status: CartStatus;
@@ -33,8 +33,8 @@ export interface CartWorkflowOptions {
   abandonedCartTimeoutMS: number;
 }
 
-export const UpdateEmailSignalDecoder = t.exact(t.type({
-  email: t.string
-}));
+export const UpdateEmailSignalDecoder = runtypes.Record({
+  email: runtypes.String
+});
 
-export type UpdateEmailSignal = t.TypeOf<typeof UpdateEmailSignalDecoder>;
+export type UpdateEmailSignal = runtypes.Static<typeof UpdateEmailSignalDecoder>;

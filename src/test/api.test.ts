@@ -14,13 +14,13 @@ describe('API', function() {
   let sendStub: sinon.SinonStub<any[], Promise<any>>; // `any` because `@types/mailgun` doesn't export `SendResponse`
   let server: Server;
 
-  const port = 3000;
+  const port = 8472;
   const client = axios.create({ baseURL: 'http://localhost:' + port });
 
   before(async function() {
     this.timeout(10000);
 
-    ({ server } = await createApp(3000));
+    ({ server } = await createApp(port));
 
     // Suppress default log output to avoid logger polluting test output
     await Core.install({ logger: new DefaultLogger('ERROR') });
@@ -75,7 +75,7 @@ describe('API', function() {
     );
 
     assert.ok(err);
-    assert.equal(err?.response?.data?.message, 'Validation failed');
+    assert.equal(err?.response?.data?.message, 'Expected { productId: string; quantity: number; }, but was incompatible');
 
     ({ data: { result } } = await client.get<{ result: Cart }>(`/query/getCart/${workflowId}`));
     assert.equal(result.items.length, 0);

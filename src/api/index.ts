@@ -4,8 +4,6 @@ import { Server } from 'http';
 import { createExpressMiddleware, useValidator } from 'temporal-rest';
 import { WorkflowClient } from '@temporalio/client';
 import * as workflows from '../workflows';
-import { pipe } from 'fp-ts/function';
-import { fold } from 'fp-ts/Either';
 
 export default async function createApp(port: number): Promise<{ app: Application, server: Server }> {
   const taskQueue = 'ecommerce';
@@ -15,24 +13,15 @@ export default async function createApp(port: number): Promise<{ app: Applicatio
 
   useValidator(
     workflows.addToCartSignal,
-    (data: any): CartItem => pipe(
-      CartItemDecoder.decode(data),
-      fold(() => { throw new Error('Validation failed'); }, (val: CartItem) => val)
-    )
+    (data: any): CartItem => CartItemDecoder.check(data)
   );
   useValidator(
     workflows.removeFromCartSignal,
-    (data: any): CartItem => pipe(
-      CartItemDecoder.decode(data),
-      fold(() => { throw new Error('Validation failed'); }, (val: CartItem) => val)
-    )
+    (data: any): CartItem => CartItemDecoder.check(data)
   );
   useValidator(
     workflows.updateEmailSignal,
-    (data: any): UpdateEmailSignal => pipe(
-      UpdateEmailSignalDecoder.decode(data),
-      fold(() => { throw new Error('Validation failed'); }, (val: UpdateEmailSignal) => val)
-    )
+    (data: any): UpdateEmailSignal => UpdateEmailSignalDecoder.check(data)
   );
 
   app.use(createExpressMiddleware(workflows, client, taskQueue));
