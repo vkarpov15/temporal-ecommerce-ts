@@ -14,7 +14,7 @@
     "express": "4.x",
     "mailgun-js": "^0.22.0",
     "runtypes": "6.5.1",
-    "temporal-rest": "0.2.0",
+    "temporal-rest": "0.3.0",
     "temporalio": "0.17.x",
     "uuid": "8.x"
   },
