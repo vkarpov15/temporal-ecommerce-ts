@@ -13,7 +13,7 @@ import {
 import assert from 'assert';
 import { createActivities } from '../activities';
 import sinon from 'sinon';
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 
 const taskQueue = 'test' + (new Date()).toLocaleDateString('en-US');
 
