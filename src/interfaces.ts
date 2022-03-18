@@ -1,3 +1,5 @@
+import * as runtypes from 'runtypes';
+
 export enum CartStatus {
   IN_PROGRESS,
   CHECKED_OUT,
@@ -5,10 +7,12 @@ export enum CartStatus {
   ABANDONED
 }
 
-export interface CartItem {
-  productId: string;
-  quantity: number;
-}
+export const CartItemDecoder = runtypes.Record({
+  productId: runtypes.String,
+  quantity: runtypes.Number
+});
+
+export type CartItem = runtypes.Static<typeof CartItemDecoder>;
 
 export interface Cart {
   status: CartStatus;
@@ -28,3 +32,9 @@ export interface Product {
 export interface CartWorkflowOptions {
   abandonedCartTimeoutMS: number;
 }
+
+export const UpdateEmailSignalDecoder = runtypes.Record({
+  email: runtypes.String
+});
+
+export type UpdateEmailSignal = runtypes.Static<typeof UpdateEmailSignalDecoder>;

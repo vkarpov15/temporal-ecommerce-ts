@@ -1,5 +1,11 @@
 import { proxyActivities, defineSignal, defineQuery, setHandler, condition } from '@temporalio/workflow';
-import { Cart, CartItem, CartStatus, CartWorkflowOptions } from './interfaces';
+import {
+  Cart,
+  CartItem,
+  CartStatus,
+  CartWorkflowOptions,
+  UpdateEmailSignal
+} from './interfaces';
 import type { createActivities } from './activities';
 
 const { sendAbandonedCartEmail } = proxyActivities<ReturnType<typeof createActivities>>({
@@ -8,7 +14,7 @@ const { sendAbandonedCartEmail } = proxyActivities<ReturnType<typeof createActiv
 
 export const addToCartSignal = defineSignal<[CartItem]>('addToCart');
 export const removeFromCartSignal = defineSignal<[CartItem]>('removeFromCart');
-export const updateEmailSignal = defineSignal<[string]>('updateEmail');
+export const updateEmailSignal = defineSignal<[UpdateEmailSignal]>('updateEmail');
 export const checkoutSignal = defineSignal('checkout');
 
 export const getCartQuery = defineQuery<Cart>('getCart');
@@ -59,9 +65,9 @@ export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void>
     }
   });
 
-  setHandler(updateEmailSignal, function updateEmailSignalHandler(email: string): void {
+  setHandler(updateEmailSignal, function updateEmailSignalHandler(data: UpdateEmailSignal): void {
     resetTimeout();
-    state.email = email;
+    state.email = data.email;
   });
 
   setHandler(getCartQuery, (): Cart => {

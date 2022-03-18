@@ -84,7 +84,7 @@ describe('cart workflow', function() {
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
 
-    await handle.signal(updateEmailSignal, 'test@temporal.io');
+    await handle.signal(updateEmailSignal, { email: 'test@temporal.io' });
     state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
@@ -115,7 +115,7 @@ describe('cart workflow', function() {
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
 
-    await handle.signal(updateEmailSignal, 'test@temporal.io');
+    await handle.signal(updateEmailSignal, { email: 'test@temporal.io' });
     state = await handle.query(getCartQuery);
     assert.equal(state.items.length, 1);
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
