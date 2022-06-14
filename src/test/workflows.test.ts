@@ -1,6 +1,7 @@
-import { WorkflowClient, WorkflowHandle } from '@temporalio/client';
+import { TestWorkflowEnvironment } from '@temporalio/testing';
+import { WorkflowHandle } from '@temporalio/client';
 import { CartStatus } from '../interfaces';
-import { Core, Worker, DefaultLogger } from '@temporalio/worker';
+import { Runtime, DefaultLogger, Worker } from '@temporalio/worker';
 import { describe, before, after, it } from 'mocha';
 import {
   cartWorkflow,
@@ -22,17 +23,18 @@ describe('cart workflow', function() {
   let worker: Worker;
   let handle: WorkflowHandle<typeof cartWorkflow>;
   let sendStub: sinon.SinonStub<any[], Promise<any>>; // `any` because `@types/mailgun` doesn't export `SendResponse`
+  let env: TestWorkflowEnvironment;
 
   before(async function() {
     this.timeout(10000);
+    Runtime.install({ logger: new DefaultLogger('WARN') });
+    env = await TestWorkflowEnvironment.create();
 
     sendStub = sinon.stub().callsFake(() => Promise.resolve());
     const activities = createActivities({ send: sendStub }, 'test@temporal.io');
 
-    // Suppress default log output to avoid logger polluting test output
-    await Core.install({ logger: new DefaultLogger('ERROR') });
-
     worker = await Worker.create({
+      connection: env.nativeConnection,
       workflowsPath: require.resolve('../workflows'),
       taskQueue,
       activities,
@@ -44,7 +46,7 @@ describe('cart workflow', function() {
   beforeEach(async function() {
     sendStub.resetHistory();
 
-    const client = new WorkflowClient();
+    const client = env.workflowClient;
 
     handle = await client.start(cartWorkflow, {
       taskQueue,
@@ -56,6 +58,9 @@ describe('cart workflow', function() {
   after(async function() {
     worker.shutdown();
     await runPromise;
+
+    await env.nativeConnection.close();
+    await env.teardown();
   });
 
   it('handles adding and removing from cart', async function() {    

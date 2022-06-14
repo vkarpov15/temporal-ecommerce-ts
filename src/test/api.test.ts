@@ -1,4 +1,5 @@
-import { Core, Worker, DefaultLogger } from '@temporalio/worker';
+import { TestWorkflowEnvironment } from '@temporalio/testing';
+import { Runtime, DefaultLogger, Worker } from '@temporalio/worker';
 import { createActivities } from '../activities';
 import { describe, before, after, it } from 'mocha';
 import createApp from '../api';
@@ -13,22 +14,23 @@ describe('API', function() {
   let worker: Worker;
   let sendStub: sinon.SinonStub<any[], Promise<any>>; // `any` because `@types/mailgun` doesn't export `SendResponse`
   let server: Server;
+  let env: TestWorkflowEnvironment;
 
   const port = 8472;
   const client = axios.create({ baseURL: 'http://localhost:' + port });
 
   before(async function() {
     this.timeout(10000);
+    Runtime.install({ logger: new DefaultLogger('WARN') });
+    env = await TestWorkflowEnvironment.create();
 
-    ({ server } = await createApp(port));
-
-    // Suppress default log output to avoid logger polluting test output
-    await Core.install({ logger: new DefaultLogger('ERROR') });
+    ({ server } = await createApp(port, env.workflowClient));
 
     sendStub = sinon.stub().callsFake(() => Promise.resolve());
     const activities = createActivities({ send: sendStub }, 'test@temporal.io');
 
     worker = await Worker.create({
+      connection: env.nativeConnection,
       workflowsPath: require.resolve('../workflows'),
       taskQueue: 'ecommerce',
       activities,
@@ -41,6 +43,9 @@ describe('API', function() {
     worker.shutdown();
     await runPromise;
     await server.close();
+
+    await env.nativeConnection.close();
+    await env.teardown();
   });
 
   it('handles adding and removing from cart', async function() {

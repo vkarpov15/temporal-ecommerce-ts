@@ -18,15 +18,6 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
-          # Comment out cache line when testing with act:
-          # (`act --platform ubuntu-latest=lucasalt/act_base:latest`)
-          cache: 'npm'
-      - name: Get Temporal docker-compose.yml
-        run: wget https://raw.githubusercontent.com/temporalio/docker-compose/main/docker-compose.yml
-      - name: Start Temporal Server
-        run: docker-compose up -d
       - run: npm install
       - run: npm run build
-      - name: Wait for Temporal Server
-        run: node .scripts/wait-on-temporal.mjs
       - run: npm test
