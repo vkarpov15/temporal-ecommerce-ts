@@ -3,7 +3,6 @@ import {
   Cart,
   CartItem,
   CartStatus,
-  CartWorkflowOptions,
   UpdateEmailSignal
 } from './interfaces';
 import type { createActivities } from './activities';
@@ -19,13 +18,11 @@ export const checkoutSignal = defineSignal('checkout');
 
 export const getCartQuery = defineQuery<Cart>('getCart');
 
-export async function cartWorkflow(options?: CartWorkflowOptions): Promise<void> {
+const abandonedCartTimeoutMS = 1000 * 60;
+
+export async function cartWorkflow(): Promise<void> {
   const state: Cart = { items: [], status: CartStatus.IN_PROGRESS };
 
-  const abandonedCartTimeoutMS = options && options.abandonedCartTimeoutMS > 0 ?
-    options.abandonedCartTimeoutMS :
-    1000 * 60;
-  
   let abandonedCartPromise = Promise.resolve();
   let timeout = setTimeout(handleAbandonedCartEmail, abandonedCartTimeoutMS);
   function resetTimeout() {

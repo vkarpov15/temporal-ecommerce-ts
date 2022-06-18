@@ -5,9 +5,11 @@ import { createExpressMiddleware, useValidator } from 'temporal-rest';
 import { WorkflowClient } from '@temporalio/client';
 import * as workflows from '../workflows';
 
-export default async function createApp(port: number): Promise<{ app: Application, server: Server }> {
+export default async function createApp(port: number, client?: WorkflowClient): Promise<{ app: Application, server: Server }> {
   const taskQueue = 'ecommerce';
-  const client = new WorkflowClient();
+  if (client === undefined) {
+    client = new WorkflowClient();
+  }
   
   const app = express();
 
