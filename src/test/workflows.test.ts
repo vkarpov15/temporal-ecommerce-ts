@@ -125,12 +125,7 @@ describe('cart workflow', function() {
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
     assert.equal(state.email, 'test@temporal.io');
 
-    await handle.result().catch(err => {
-      if (err instanceof WorkflowFailedError) {
-        return;
-      }
-      throw err;
-    });
+    await env.sleep('61 minutes');
 
     assert.ok(sendStub.calledOnce);
     assert.equal(sendStub.getCalls()[0].args[0].to, 'test@temporal.io');
