@@ -15,7 +15,7 @@
     "mailgun-js": "^0.22.0",
     "runtypes": "6.5.1",
     "temporal-rest": "0.5.0",
-    "temporalio": "0.23.x",
+    "temporalio": "1.0.0-rc.0",
     "uuid": "8.x"
   },
   "devDependencies": {
