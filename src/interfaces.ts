@@ -29,10 +29,6 @@ export interface Product {
   price: number;
 }
 
-export interface CartWorkflowOptions {
-  abandonedCartTimeoutMS: number;
-}
-
 export const UpdateEmailSignalDecoder = runtypes.Record({
   email: runtypes.String
 });

@@ -1,5 +1,5 @@
 import { TestWorkflowEnvironment } from '@temporalio/testing';
-import { WorkflowHandle } from '@temporalio/client';
+import { WorkflowHandle, WorkflowFailedError } from '@temporalio/client';
 import { CartStatus } from '../interfaces';
 import { Runtime, DefaultLogger, Worker } from '@temporalio/worker';
 import { describe, before, after, it } from 'mocha';
@@ -50,8 +50,7 @@ describe('cart workflow', function() {
 
     handle = await client.start(cartWorkflow, {
       taskQueue,
-      workflowId: 'cart-test-' + uuidv4(),
-      args: [{ abandonedCartTimeoutMS: 50 }]
+      workflowId: 'cart-test-' + uuidv4()
     });
   });
 
@@ -126,14 +125,11 @@ describe('cart workflow', function() {
     assert.deepEqual(state.items[0], { productId: '2', quantity: 2 });
     assert.equal(state.email, 'test@temporal.io');
 
-    await new Promise<void>(resolve => {
-      const interval = setInterval(() => {
-        if (!sendStub.getCalls().length) {
-          return;
-        }
-        resolve();
-        clearInterval(interval);
-      }, 100);
+    await handle.result().catch(err => {
+      if (err instanceof WorkflowFailedError) {
+        return;
+      }
+      throw err;
     });
 
     assert.ok(sendStub.calledOnce);
